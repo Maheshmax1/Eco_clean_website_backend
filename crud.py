@@ -51,6 +51,15 @@ def delete_event(db: Session, event_id: int):
         db.commit()
     return db_event
 
+def update_event(db: Session, event_id: int, event_update: schemas.EventCreate):
+    db_event = db.query(models.Event).filter(models.Event.id == event_id).first()
+    if db_event:
+        for key, value in event_update.dict().items():
+            setattr(db_event, key, value)
+        db.commit()
+        db.refresh(db_event)
+    return db_event
+
 # --- Registration Operations ---
 def register_user_for_event(db: Session, user_id: int, event_id: int):
     # Check if already registered

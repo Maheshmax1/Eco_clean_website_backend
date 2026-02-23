@@ -9,22 +9,23 @@ router = APIRouter(
 )
 
 @router.get("/stats")
-def get_dashboard_stats(current_user: models.User = Depends(dependencies.get_current_user), db: Session = Depends(dependencies.get_db)):
-    if current_user.role != "admin":
-         raise HTTPException(status_code=403, detail="Not authorized")
+def get_dashboard_stats(current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
     return crud.get_stats(db)
 
 @router.get("/volunteers", response_model=List[schemas.UserResponse])
-def get_volunteers(current_user: models.User = Depends(dependencies.get_current_user), db: Session = Depends(dependencies.get_db)):
-    if current_user.role != "admin":
-         raise HTTPException(status_code=403, detail="Not authorized")
+def get_volunteers(current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
     # For now returning all users, assuming all non-admins are volunteers
     # Real implementation might filter by role="volunteer"
     users = db.query(models.User).filter(models.User.role == "volunteer").all()
     return users
 
 @router.get("/messages", response_model=List[schemas.ContactMessageResponse])
-def get_messages(current_user: models.User = Depends(dependencies.get_current_user), db: Session = Depends(dependencies.get_db)):
-    if current_user.role != "admin":
-         raise HTTPException(status_code=403, detail="Not authorized")
+def get_messages(current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
     return crud.get_contact_messages(db)
+
+@router.get("/event-registrations", response_model=List[schemas.EventWithRegistrations])
+def get_event_registrations(current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
+    # Fetch all events with their registrations eagerly
+    events = db.query(models.Event).all()
+    return events
+
