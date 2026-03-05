@@ -29,3 +29,9 @@ def get_event_registrations(current_user: models.User = Depends(dependencies.get
     events = db.query(models.Event).all()
     return events
 
+@router.delete("/messages/{message_id}")
+def delete_message(message_id: int, current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
+    db_message = crud.delete_contact_message(db, message_id)
+    if not db_message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"message": "Message solved and removed"}

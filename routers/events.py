@@ -1,12 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import crud, schemas, dependencies, models
+import crud, schemas, dependencies, models, os, shutil
+from datetime import datetime
 
 router = APIRouter(
     prefix="/events",
     tags=["Events"]
 )
+
+@router.post("/upload")
+async def upload_image(file: UploadFile = File(...), current_user: models.User = Depends(dependencies.get_current_admin)):
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+        
+    file_extension = os.path.splitext(file.filename)[1]
+    filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}{file_extension}"
+    file_path = os.path.join("uploads", filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    return {"id": filename, "url": f"/uploads/{filename}"}
 
 @router.get("/", response_model=List[schemas.EventResponse])
 def read_events(status: Optional[str] = None, skip: int = 0, limit: int = 100, current_user: Optional[models.User] = Depends(dependencies.get_current_user_optional), db: Session = Depends(dependencies.get_db)):
@@ -75,6 +90,13 @@ def join_event(event_id: int, current_user: models.User = Depends(dependencies.g
     registration = crud.register_user_for_event(db, user_id=current_user.id, event_id=event_id)
     return registration
 
+@router.post("/{event_id}/leave")
+def leave_event(event_id: int, current_user: models.User = Depends(dependencies.get_current_user), db: Session = Depends(dependencies.get_db)):
+    success = crud.unregister_user_from_event(db, user_id=current_user.id, event_id=event_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="You are not registered for this event")
+    return {"message": "You have left the event"}
+
 # Admin endpoints
 @router.post("/", response_model=schemas.EventResponse)
 def create_event(event: schemas.EventCreate, current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
@@ -88,8 +110,10 @@ def delete_event(event_id: int, current_user: models.User = Depends(dependencies
     return db_event
 
 @router.put("/{event_id}", response_model=schemas.EventResponse)
-def update_event(event_id: int, event: schemas.EventCreate, current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
+def update_event(event_id: int, event: schemas.EventUpdate, current_user: models.User = Depends(dependencies.get_current_admin), db: Session = Depends(dependencies.get_db)):
     db_event = crud.update_event(db, event_id=event_id, event_update=event)
     if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
     return db_event
+
+  

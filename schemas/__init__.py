@@ -1,5 +1,6 @@
 from .user import UserBase, UserCreate, UserLogin, UserResponse, UserWithEvents
-from .event import EventBase, EventCreate, EventResponse, EventWithRegistrations
+from .user import UserBase, UserCreate, UserLogin, UserResponse, UserWithEvents
+from .event import EventBase, EventCreate, EventUpdate, EventStatusUpdate, EventResponse, EventWithRegistrations
 from .registration import RegistrationBase, RegistrationCreate, RegistrationResponse, RegistrationWithUser
 from .contact import ContactMessageCreate, ContactMessageResponse
 from .token import Token, TokenData

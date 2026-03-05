@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from database import engine, Base
 from routers import auth, events, users, contact, admin
+import os
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -23,6 +25,11 @@ app.include_router(events.router)
 app.include_router(users.router)
 app.include_router(contact.router)
 app.include_router(admin.router)
+
+# Serve static files from the uploads directory
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
 def read_root():

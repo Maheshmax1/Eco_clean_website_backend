@@ -12,11 +12,24 @@ class EventBase(BaseModel):
     event_date: str
     start_time: str
     end_time: str
-    image_url: str
+    image_url: Optional[str] = None
     status: str = "upcoming"
 
 class EventCreate(EventBase):
     pass
+
+class EventUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    event_date: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    image_url: Optional[str] = None
+    status: Optional[str] = None
+
+class EventStatusUpdate(BaseModel):
+    status: str
 
 class EventResponse(EventBase):
     id: int

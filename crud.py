@@ -51,10 +51,12 @@ def delete_event(db: Session, event_id: int):
         db.commit()
     return db_event
 
-def update_event(db: Session, event_id: int, event_update: schemas.EventCreate):
+def update_event(db: Session, event_id: int, event_update: schemas.EventUpdate):
     db_event = db.query(models.Event).filter(models.Event.id == event_id).first()
     if db_event:
-        for key, value in event_update.dict().items():
+        # Use exclude_unset=True to only update what was provided in the JSON body
+        update_data = event_update.dict(exclude_unset=True)
+        for key, value in update_data.items():
             setattr(db_event, key, value)
         db.commit()
         db.refresh(db_event)
@@ -76,6 +78,17 @@ def register_user_for_event(db: Session, user_id: int, event_id: int):
     db.refresh(db_reg)
     return db_reg
 
+def unregister_user_from_event(db: Session, user_id: int, event_id: int):
+    registration = db.query(models.Registration).filter(
+        models.Registration.user_id == user_id, 
+        models.Registration.event_id == event_id
+    ).first()
+    if registration:
+        db.delete(registration)
+        db.commit()
+        return True
+    return False
+
 # --- Contact Operations ---
 def create_contact_message(db: Session, message: schemas.ContactMessageCreate):
     db_message = models.ContactMessage(**message.dict())
@@ -96,3 +109,10 @@ def get_stats(db: Session):
         "completed_events": db.query(models.Event).filter(models.Event.status == "completed").count(),
         "messages_count": db.query(models.ContactMessage).count()
     }
+
+def delete_contact_message(db: Session, message_id: int):
+    db_message = db.query(models.ContactMessage).filter(models.ContactMessage.id == message_id).first()
+    if db_message:
+        db.delete(db_message)
+        db.commit()
+    return db_message
