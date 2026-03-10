@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import crud
 import models
 import schemas
-import database
+import db as database
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv

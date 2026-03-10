@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from database import engine, Base
+from db import engine, Base
 from routers import auth, events, users, contact, admin
 import os
 
@@ -10,7 +10,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="EcoClean API", version="1.0.0")
 
-# Configure CORS
+# CORS = Allow your frontend to talk to your backend.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,18 +19,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
 app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(users.router)
 app.include_router(contact.router)
 app.include_router(admin.router)
 
-# Serve static files from the uploads directory
+# ─── Static file uploads ───
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# ─── Health check ───
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to EcoClean API"}
+    return {"status": "ok", "message": "Welcome to EcoClean API"}
